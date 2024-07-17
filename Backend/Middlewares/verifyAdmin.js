@@ -3,22 +3,22 @@ const Admin = require('../Model/adminModel');
 const { errorHandler } = require('../Utils/error');
 require('dotenv').config();
 
+
 const verifyAdmin = async (req, res, next) => {
-    console.log("Middleware is calling ");
+    console.log("Middileware is calling ");
     try {
         const token = req.cookies.access_token;
-        console.log("Token is ", token);
-
-        // If token is undefined or null, redirect to the 404 page
+        console.log("token is  ",token);
         if (!token) {
-            return res.redirect('/404');
+           
+            return next(errorHandler(401, "Unauthorized - Admin session or token not found."));
+            
         }
-
+        
         const verified = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("Verified ", verified);
-
+        console.log("verified ",verified);
         const validAdmin = await Admin.findById(verified.id);
-        console.log("Valid Admin ", validAdmin);
+        console.log("tvalidAdmin  ",validAdmin);
 
         if (!validAdmin) {
             return next(errorHandler(404, "Unauthorized - Admin not found."));
