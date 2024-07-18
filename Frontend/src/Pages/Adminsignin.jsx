@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import {  adminSignInFailure,adminSignInStart,adminSignInSuccess } from "../Redux/user/adminSlice";
 
 function Adminsignin() {
   const [adminData, setAdminData] = useState({});
   const toast = useToast();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
 
   const handleChange = (e) => {
     setAdminData({ ...adminData, [e.target.id]: e.target.value });
@@ -44,6 +48,8 @@ function Adminsignin() {
     }
 
     try {
+      dispatch(adminSignInStart())
+
       const res = await fetch("/api/admin/admin-signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,7 +62,7 @@ function Adminsignin() {
       }
 
       const data = await res.json();
-      console.log("data is >>", data);
+      
 
       toast({
         title: "Sign-in Successful",
@@ -65,9 +71,10 @@ function Adminsignin() {
         duration: 3000,
         isClosable: true,
       });
-
+      dispatch(adminSignInSuccess(true))
       navigate("/admin-home");
     } catch (error) {
+      dispatch(adminSignInFailure(error.message))
       toast({
         title: "Sign-in Error",
         description: error.message || "An error occurred. Please try again later.",

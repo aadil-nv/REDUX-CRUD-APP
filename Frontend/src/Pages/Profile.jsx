@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from '../fireBase';
-import { useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, Button } from '@chakra-ui/react';
+import { useToast } from '@chakra-ui/react';
 import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUser, signOut } from '../Redux/user/userSlice';
 
 function Profile() {
@@ -16,43 +16,12 @@ function Profile() {
   const dispatch = useDispatch();
   const { currentUser } = useSelector(state => state.user);
 
-  // Confirmation Modals
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
-
-  const onOpenDeleteModal = () => setIsDeleteModalOpen(true);
-  const onCloseDeleteModal = () => setIsDeleteModalOpen(false);
-  const onOpenSignOutModal = () => setIsSignOutModalOpen(true);
-  const onCloseSignOutModal = () => setIsSignOutModalOpen(false);
-
-  // Validate Username
-  const validateUsername = (username) => {
-    // Your username validation logic here
-    return /^[A-Za-z0-9]{3,}$/.test(username);
-  };
-
-  // Validate Email
-  const validateEmail = (email) => {
-    // Email syntax validation
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-  
-
-  // Validate Password
-  const validatePassword = (password) => {
-    // Your password validation logic here
-    return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+])(?!.*\s).{6,}$/.test(password);
-  };
-
-  // Handle File Upload
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (validateImage(file)) {
-      setImage(file);
+  useEffect(() => {
+    if (image) {
+      handleImageUpload(image);
     }
-  };
+  }, [image]);
 
-  // Image Validation
   const validateImage = (file) => {
     const allowedExtensions = /(\.jpg|\.jpeg|\.png|\.img)$/i;
     if (!allowedExtensions.exec(file.name)) {
@@ -78,7 +47,6 @@ function Profile() {
     return true;
   };
 
-  // Handle Image Upload
   const handleImageUpload = async (file) => {
     const storage = getStorage(app);
     const filename = new Date().getTime() + file.name;
@@ -118,37 +86,64 @@ function Profile() {
     );
   };
 
-  // Handle Form Submission
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (validateImage(file)) {
+      setImage(file);
+    }
+  };
+
+  const validateForm = () => {
+    const { username, email, password } = formData;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+
+    if (!username) {
+      toast({
+        title: "Validation Error",
+        description: "Username cannot be empty.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    if (username.length < 3) {
+      toast({
+        title: "Validation Error",
+        description: "Username must be at least 3 characters long.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Validation Error",
+        description: "Invalid email format.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    if (password && !passwordRegex.test(password)) {
+      toast({
+        title: "Validation Error",
+        description: "Password must be at least 6 characters long and contain at least one uppercase letter, one digit, and one symbol.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateUsername(formData.username)) {
-      toast({
-        title: "Invalid Username",
-        description: "Username should be at least 3 characters long and contain only alphanumeric characters.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    if (!validateEmail(formData.email)) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    if (!validatePassword(formData.password)) {
-      toast({
-        title: "Invalid Password",
-        description: "Password should be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special symbol.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+    if (!validateForm()) {
       return;
     }
 
@@ -185,7 +180,6 @@ function Profile() {
     }
   };
 
-  // Handle Delete Account
   const handleDeleteAccount = async () => {
     try {
       const res = await fetch(`/api/users/delete/${currentUser._id}`, {
@@ -214,21 +208,20 @@ function Profile() {
     }
   };
 
-  // Handle Sign Out
   const handleSignOut = async () => {
     try {
       await fetch('api/auth/sign-out');
       dispatch(signOut());
       toast({
-        title: "Sign Out Successful",
-        description: "You have been signed out.",
-        status: "success",
+        title: "Signout successfully",
+        description: "You have signed out successfully.",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       toast({
-        title: "Sign Out Failed",
+        title: "Signout Failed",
         description: error.message,
         status: "error",
         duration: 3000,
@@ -241,7 +234,6 @@ function Profile() {
     <div className='p-3 max-w-lg mx-auto'>
       <h1 className='text-3xl font-extrabold text-center my-7'>Profile</h1>
       <form className='flex flex-col items-center gap-4' onSubmit={handleSubmit}>
-        {/* Profile Picture Upload */}
         <input type="file" ref={fileRef} hidden accept='image/*' onChange={handleFileChange} />
         <img
           src={formData.profilePicture || currentUser.profilepicture}
@@ -259,83 +251,41 @@ function Profile() {
             </div>
           </div>
         )}
-        {/* Username Input */}
         <input
           type="text"
-          placeholder="Username"
+          placeholder="username"
           id="username"
           className="bg-slate-300 p-3 rounded-lg w-full"
           defaultValue={currentUser.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
         />
-        {/* Email Input */}
         <input
           type="text"
-          placeholder="Email"
+          placeholder="email"
           id="email"
           className="bg-slate-300 p-3 rounded-lg w-full"
           defaultValue={currentUser.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
-        {/* Password Input */}
         <input
           type="password"
-          placeholder="Password"
+          placeholder="password"
           id="password"
           className="bg-slate-300 p-3 rounded-lg w-full"
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
         />
-        {/* Submit Button */}
         <button className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80 w-full'>
           UPDATE
         </button>
       </form>
-      {/* Delete Account and Sign Out Buttons */}
       <div className='flex justify-between mt-5'>
-        <span className='text-red-700 cursor-pointer' onClick={onOpenDeleteModal}>
+        <span className='text-red-700 cursor-pointer' onClick={handleDeleteAccount}>
           Delete Account
         </span>
-        <span className='text-red-700 cursor-pointer' onClick={onOpenSignOutModal}>
+        <span className='text-red-700 cursor-pointer' onClick={handleSignOut}>
           Sign Out
         </span>
       </div>
-
-      {/* Delete Account Confirmation Modal */}
-      <Modal isOpen={isDeleteModalOpen} onClose={onCloseDeleteModal}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirm Account Deletion</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            Are you sure you want to delete your account? This action cannot be undone.
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteAccount}>
-              Confirm
-            </Button>
-            <Button onClick={onCloseDeleteModal}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Sign Out Confirmation Modal */}
-      <Modal isOpen={isSignOutModalOpen} onClose={onCloseSignOutModal}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirm Sign Out</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            Are you sure you want to sign out?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSignOut}>
-              Confirm
-            </Button>
-            <Button onClick={onCloseSignOutModal}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
     </div>
   );
 }

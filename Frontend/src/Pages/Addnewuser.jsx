@@ -11,7 +11,7 @@ function Addnewuser() {
   const [imagePercentage, setImagePercentage] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
   const toast = useToast();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -102,43 +102,92 @@ function Addnewuser() {
 
   const handleFormData = async (e) => {
     e.preventDefault();
-    try {
-        const res = await fetch('/api/admin/admin-add-userdata', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-          });
-    
-          const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data.message || 'Failed to add new user');
-          }
-    
-          toast({
-            title: "New user added Successful",
-            description: "Your profile has been updated.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
 
-          // Clear the form
-          setFormData({});
-          setImage(null);
-          fileRef.current.value = null;
-          
+    // Validation
+    const { username, email, password } = formData;
+
+    if (!username || !email || !password) {
+      toast({
+        title: "Validation Error",
+        description: "All fields are required.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (username.trim().length < 3) {
+      toast({
+        title: "Validation Error",
+        description: "Username must be at least 3 characters long and not contain only spaces.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email) || email.trim() === '') {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+    if (!passwordPattern.test(password)) {
+      toast({
+        title: "Validation Error",
+        description: "Password must be at least 6 characters long and contain 1 uppercase letter, 1 digit, and 1 special character.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/admin-add-userdata', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to add new user');
+      }
+
+      toast({
+        title: "New user added Successful",
+        description: "Your profile has been updated.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Clear the form
+      setFormData({});
+      setImage(null);
+      fileRef.current.value = null;
 
     } catch (error) {
-        toast({
-            title: "Update Failed",
-            description: error.message,
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-          navigate('/404');
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      // navigate('/admin-signin');
     }
   };
 

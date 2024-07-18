@@ -13,6 +13,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import Cookies from 'js-cookie'; // Import js-cookie library
+import { useSelector } from 'react-redux';
 
 function Adminhome() {
   const [usersData, setUsersData] = useState([]);
@@ -22,6 +23,8 @@ function Adminhome() {
   const toast = useToast();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { currentAdmin } = useSelector(state => state.user);
+
 
   useEffect(() => {
     fetch('/api/admin/users-data')
@@ -37,7 +40,7 @@ function Adminhome() {
       })
       .catch((error) => {
         console.log(error);
-        navigate('/404'); // Redirect to a 404 page or an error page
+        navigate('/admin-signin'); // Redirect to a 404 page or an error page
       });
   }, [navigate]);
 
@@ -125,7 +128,7 @@ function Adminhome() {
         <h1 className="text-2xl font-bold text-center py-4 bg-blue-500 text-white">USERS LIST</h1>
         <div className="p-4 flex justify-between items-center">
           <div className="flex">
-            <Link to={'/add-newuser'}>
+            <Link to={ '/admin-add-userdata' }>
               <button className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200">
                 Add User
               </button>

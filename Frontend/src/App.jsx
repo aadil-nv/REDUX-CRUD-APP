@@ -12,6 +12,7 @@ import Adminhome from "./Pages/Adminhome";
 import Edituserdata from "./Pages/Edituserdata";
 import Addnewuser from "./Pages/Addnewuser";
 import Page404 from "./Pages/Page404";
+import AdminPrivateRoutes from "./Components/AdminPrivateRoutes";
 
 
 function App() {
@@ -26,10 +27,12 @@ function App() {
         <Route  path="/sign-up"  element={  <><Header/>   <Signup/> </>} />
         <Route element={<PrivateRoutes/>} ><Route  path="/profile"  element={ <> <Header/>   <Profile/> </>} /></Route>
       
+
         <Route  path="/admin-signin"  element={<Adminsignin/>} />
-        <Route  path="/admin-home"  element={<Adminhome/>} />
-        <Route  path="/edit-userdata/:id"  element={<Edituserdata/>} />
-        <Route  path="/admin-add-userdata"  element={<Addnewuser/>} />
+        <Route element={<AdminPrivateRoutes/>}> <Route  path="/admin-home"  element={<Adminhome/>} /> </Route>
+        <Route element={<AdminPrivateRoutes/>}> <Route  path="/edit-userdata/:id"  element={<Edituserdata/>} /> </Route>
+      <Route element={<AdminPrivateRoutes/>}> <Route  path="/admin-add-userdata"  element={<Addnewuser/>} /> </Route>
+       
         <Route  path="/404"  element={<Page404/>} />
       </Routes>
     </BrowserRouter>

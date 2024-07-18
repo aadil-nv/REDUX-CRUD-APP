@@ -70,10 +70,7 @@ const fetchUserData = async (req, res, next) => {
 
 const updateUserData = async (req, res, next) => {
     try {
-        const token = req.cookies.access_token;
-        if (!token) {
-            return next(errorHandler(401, "Unauthorized - Admin session or token not found."));
-        }
+        
         if (!req.params.id) {
             return next(errorHandler(401, "Id is not found"));
         }
@@ -109,11 +106,11 @@ const updateUserData = async (req, res, next) => {
 
 const addUserData = async (req,res,next)=>{
     
-    const token = req.cookies.access_token;
-    if (!token) {
-        return next(errorHandler(401, "Unauthorized - Admin session or token not found."));
-    }
     try {
+        const token = req.cookies.access_token;
+        if (!token) {
+            return next(errorHandler(401, "Unauthorized - Admin session or token not found."));
+        }
 
 
         const {username , email, password,profilepicture} = req.body;

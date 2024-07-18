@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@chakra-ui/toast";
 import { useDispatch, useSelector } from "react-redux";
-import { signInFailure, signInStart, signInSuccess } from "../Redux/user/userSlice";
+import {  signInFailure, signInStart, signInSuccess } from "../Redux/user/userSlice";
 import OAuth from "../Components/OAuth";
 
 function Signin() {
@@ -11,6 +11,7 @@ function Signin() {
   const toast = useToast();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -94,6 +95,7 @@ function Signin() {
 
       if (data.success === false) {
         dispatch(signInFailure(data.message));
+        
         toast({
           description: data.message || "An error occurred.",
           status: "error",
@@ -104,6 +106,7 @@ function Signin() {
       }
 
       dispatch(signInSuccess(data));
+      
       toast({
         description: "Signed in successfully",
         status: "success",

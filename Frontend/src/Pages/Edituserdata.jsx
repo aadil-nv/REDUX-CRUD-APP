@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useToast, Progress, Box, Image, Text, Button } from '@chakra-ui/react';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from '../fireBase';
@@ -12,7 +12,8 @@ function Edituserdata() {
   const [image, setImage] = useState(null);
   const [imagePercentage, setImagePercentage] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
-  const [passwordValidation, setPasswordValidation] = useState(true); // Initially true if no password input
+  const [passwordValidation, setPasswordValidation] = useState(true);
+  const navigate = useNavigate()
 
   const toast = useToast();
 
@@ -20,16 +21,23 @@ function Edituserdata() {
     fetch(`/api/admin/admin-fetch-userdata/${id}`)
       .then((res) => {
         if (!res.ok) {
+          navigate('/admin-signin')
           throw new Error("Failed to fetch");
         }
         return res.json();
       })
-      .then((data) => {
-        setData(data);
-        // Decrypting the password for display (for demonstration purposes)
-        const decryptedPassword = decryptedPassword(data[0].password); // Replace with actual decryption logic
+      .then((dataUser) => {
+        console.log("========data is =========="+dataUser[0])
+        if(!dataUser){
+          navigate('/admin-signin')
+        }
+        setData(dataUser);
+       
+        const decryptedPassword = decryptedPassword(data[0].password); 
         setFormData({ ...data[0], password: decryptedPassword });
       })
+
+
       
   }, [id, toast]);
 
@@ -126,9 +134,12 @@ function Edituserdata() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
-      });
+      })
+      
 
       const data = await res.json();
+      console.log("===========data is =========",data);
+      
       if (!res.ok) {
         throw new Error(data.message || 'Failed to update user');
       }
@@ -243,7 +254,7 @@ function Edituserdata() {
           </Button>
         </form>
       ) : (
-        <p className="text-center text-lg text-blue-900 font-bold">Loading...</p>
+        navigate('/admin-signin')
       )}
       {uploadComplete && (
         <Text className="text-center text-lg text-green-600 font-bold mt-4">Upload Complete</Text>
